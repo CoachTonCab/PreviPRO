@@ -1354,14 +1354,6 @@ function mettreAJourCalculsAvances() {
     
     const totalCharges = totalAnnuel + redevance + ikAnnuel + amortissements;
     const resultat = caAnnuelBrut - totalCharges;
-    
-    // Seuil de rentabilité
-    const seuil = totalCharges;
-    document.getElementById('seuil-rentabilite').textContent = formatEuro(seuil);
-    
-    // Taux de marge
-    const tauxMarge = caAnnuelBrut > 0 ? (resultat / caAnnuelBrut) * 100 : 0;
-    document.getElementById('taux-marge').textContent = tauxMarge.toFixed(1) + ' %';
 }
 
 // ===== SIMULATIONS "ET SI..." =====

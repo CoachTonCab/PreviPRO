@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Prévisionnel - Professionnel Libéral</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img id="logo-img" src="logo_entier_noir.png" alt="Logo" class="logo">
+            </div>
+            <h1>Prévisionnel Financier</h1>
+            <p class="subtitle">Simulation de votre chiffre d'affaires, charges et bénéfice annuel</p>
+            <div class="header-actions">
+                <button type="button" class="btn-export" id="btn-save-simulation">💾 Sauvegarder</button>
+                <button type="button" class="btn-export" id="btn-load-simulations">📂 Mes simulations</button>
+                <button type="button" class="btn-export" id="btn-export-pdf">📄 Export PDF</button>
+                <button type="button" class="btn-export" id="btn-export-excel">📊 Export Excel</button>
+            </div>
+        </header>
+
+        <div class="form-container">
+            <!-- SECTION 1: INFORMATIONS DE BASE -->
+            <section class="form-section">
+                <h2>1. Informations de base</h2>
+                <div class="form-group">
+                    <label for="prix-seance">
+                        Prix moyen d'une séance (€)
+                        <span class="tooltip-icon" title="Prix moyen que vous facturez pour une séance. Si vos tarifs varient, faites une moyenne.">ℹ️</span>
+                    </label>
+                    <input type="number" id="prix-seance" min="0" step="0.01" placeholder="Ex: 50">
+                </div>
+                <div class="form-group">
+                    <label for="taux-remplissage">
+                        Taux de remplissage (%)
+                        <span class="tooltip-icon" title="Pourcentage de séances réellement effectuées par rapport au nombre de créneaux disponibles. Ex: 80% signifie que 8 séances sur 10 possibles sont réalisées.">ℹ️</span>
+                    </label>
+                    <input type="number" id="taux-remplissage" min="0" max="100" step="1" placeholder="Ex: 80" value="80">
+                    <small>Pourcentage de séances réellement effectuées</small>
+                </div>
+                <div class="form-group">
+                    <label>Redevance éventuelle
+                        <span class="tooltip-icon" title="Si vous êtes en contrat de collaboration, vous pouvez avoir une redevance à verser. Elle peut être exprimée en pourcentage de votre chiffre d'affaires ou en montant fixe annuel.">ℹ️</span>
+                    </label>
+                    <div class="radio-group" style="margin-bottom: 5px; display: flex; flex-wrap: wrap; gap: 15px;">
+                        <label>
+                            <input type="radio" name="redevance-type" id="redevance-pourcentage" value="pourcentage" checked>
+                            Pourcentage du CA (%)
+                        </label>
+                        <label>
+                            <input type="radio" name="redevance-type" id="redevance-fixe" value="fixe">
+                            Montant fixe annuel (€)
+                        </label>
+                    </div>
+                    <div id="redevance-pourcentage-container" style="margin-top: 5px;">
+                        <input type="number" id="redevance-pourcentage-input" min="0" max="100" step="0.1" placeholder="Ex: 10" value="0">
+                        <small>Pourcentage de votre CA annuel</small>
+                    </div>
+                    <div id="redevance-fixe-container" style="display: none; margin-top: 5px;">
+                        <input type="number" id="redevance-fixe-input" min="0" step="0.01" placeholder="Ex: 5000" value="0">
+                        <small>Montant fixe à payer annuellement</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: ORGANISATION HEBDOMADAIRE -->
+            <section class="form-section">
+                <h2>2. Organisation hebdomadaire</h2>
+                <p style="margin-bottom: 20px; color: var(--text-light);">Cochez les demi-journées où vous travaillez et indiquez le nombre de séances pour chaque demi-journée.</p>
+                
+                <div class="semaine-container">
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Lundi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="lundi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="lundi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="lundi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="lundi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Mardi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="mardi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="mardi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="mardi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="mardi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Mercredi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="mercredi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="mercredi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="mercredi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="mercredi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Jeudi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="jeudi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="jeudi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="jeudi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="jeudi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Vendredi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="vendredi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="vendredi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="vendredi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="vendredi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Samedi</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="samedi">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="samedi" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="samedi">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="samedi" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="jour-item">
+                        <div class="jour-header">
+                            <strong>Dimanche</strong>
+                        </div>
+                        <div class="demi-journees">
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-matin" data-jour="dimanche">
+                                    Matin
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="dimanche" data-demi="matin" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                            <div class="demi-journee">
+                                <label>
+                                    <input type="checkbox" class="travaille-apres-midi" data-jour="dimanche">
+                                    Après-midi
+                                </label>
+                                <input type="number" class="seances-demi-journee" data-jour="dimanche" data-demi="apres-midi" min="0" step="1" placeholder="0" value="0" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <strong>Calcul automatique :</strong>
+                    <div>Nombre de séances par semaine : <span id="seances-semaine">0</span></div>
+                    <div>Nombre de jours travaillés par semaine : <span id="jours-semaine-calc">0</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: TEMPS DE TRAVAIL RÉEL ANNUEL -->
+            <section class="form-section">
+                <h2>3. Temps de travail réel annuel</h2>
+                <p style="margin-bottom: 20px; color: var(--text-light);">Pour 2026, nous nous basons sur une année de <strong>53 semaines</strong>. Ce nombre de semaines sera utilisé pour tous les calculs.</p>
+                <div class="form-group">
+                    <label for="semaines-vacances">Nombre de semaines de vacances prévues
+                        <span class="tooltip-icon" title="Indiquez le nombre de semaines complètes où vous ne travaillerez pas dans l'année. Ces semaines seront soustraites des 53 semaines de l'année pour calculer vos semaines réellement travaillées.">ℹ️</span>
+                    </label>
+                    <input type="number" id="semaines-vacances" min="0" max="53" step="1" placeholder="Ex: 5" value="5">
+                </div>
+                <div class="form-group">
+                    <label for="jours-feries">Nombre de jours fériés tombant sur des jours travaillés
+                        <span class="tooltip-icon" title="Comptez uniquement les jours fériés qui tombent sur un jour où vous travaillez habituellement ET qui ne sont pas déjà inclus dans vos semaines de vacances. Ces jours seront soustraits du nombre total de jours travaillés.">ℹ️</span>
+                    </label>
+                    <input type="number" id="jours-feries" min="0" max="15" step="1" placeholder="Ex: 8" value="8">
+                    <small><strong>Important :</strong> Comptez uniquement les jours fériés qui tombent :
+                        <br>• Sur un jour où vous travaillez habituellement (ex: si vous travaillez le lundi et qu'un jour férié tombe un lundi)
+                        <br>• ET qui ne sont pas dans une semaine de vacances que vous avez prévue de ne pas travailler</small>
+                </div>
+                <div class="info-box">
+                    <strong>Calculs automatiques :</strong>
+                    <div>Semaines réellement travaillées : <span id="semaines-travaillees">0</span></div>
+                    <div>Nombre total de jours travaillés dans l'année : <span id="jours-travaillees-annuel">0</span></div>
+                    <div>Nombre total de séances annuelles : <span id="seances-annuelles">0</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: CALCUL DU CHIFFRE D'AFFAIRES -->
+            <section class="form-section highlight">
+                <h2>4. Chiffre d'affaires BRUT</h2>
+                <div class="info-box warning-box" style="margin-bottom: 20px;">
+                    <div class="warning-title"><strong>⚠️ Important : Montants BRUTS</strong></div>
+                    <div class="warning-text">Ces montants représentent votre chiffre d'affaires <strong>BRUT</strong>, c'est-à-dire le total de vos recettes <strong>avant toute déduction</strong> (charges, cotisations sociales, impôts, etc.).</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-item">
+                        <span class="result-label">Chiffre d'affaires annuel BRUT :</span>
+                        <span class="result-value" id="ca-annuel-brut">0 €</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Chiffre d'affaires mensuel moyen BRUT :</span>
+                        <span class="result-value" id="ca-mensuel">0 €</span>
+                    </div>
+                    <div class="result-item" id="redevance-result" style="display: none;">
+                        <span class="result-label">Redevance annuelle (à déduire) :</span>
+                        <span class="result-value" id="redevance-annuelle">0 €</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: CHARGES MENSUELLES -->
+            <section class="form-section">
+                <h2>5. Charges / Achats (montants mensuels)</h2>
+                <div class="charges-grid">
+                    <div class="form-group">
+                        <label for="charge-petit-materiel">Petit matériel et fournitures</label>
+                        <input type="number" class="charge-input" id="charge-petit-materiel" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-loyer">Loyer</label>
+                        <input type="number" class="charge-input" id="charge-loyer" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-locatives">Charges locatives</label>
+                        <input type="number" class="charge-input" id="charge-locatives" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-logiciels">Abonnements logiciels</label>
+                        <input type="number" class="charge-input" id="charge-logiciels" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-telephone">Téléphone / Internet</label>
+                        <input type="number" class="charge-input" id="charge-telephone" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-assurances">Assurances</label>
+                        <input type="number" class="charge-input" id="charge-assurances" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-mutuelle">Mutuelle / Prévoyance</label>
+                        <input type="number" class="charge-input" id="charge-mutuelle" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-honoraires">Honoraires (expert-comptable, avocat...)</label>
+                        <input type="number" class="charge-input" id="charge-honoraires" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-repas">Frais de repas professionnels</label>
+                        <input type="number" class="charge-input" id="charge-repas" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-deplacement">Frais de déplacement (hors IK)</label>
+                        <input type="number" class="charge-input" id="charge-deplacement" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-formations">Formations professionnelles</label>
+                        <input type="number" class="charge-input" id="charge-formations" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-bancaires">Frais bancaires</label>
+                        <input type="number" class="charge-input" id="charge-bancaires" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-cfe">CFE</label>
+                        <input type="number" class="charge-input" id="charge-cfe" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="charge-interets">Intérêts d'emprunt</label>
+                        <input type="number" class="charge-input" id="charge-interets" min="0" step="0.01" placeholder="0" value="0">
+                    </div>
+                </div>
+                <div class="info-box">
+                    <strong>Total des charges :</strong>
+                    <div>Total mensuel : <span id="total-charges-mensuel">0 €</span></div>
+                    <div>Total annuel : <span id="total-charges-annuel">0 €</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: INDEMNITÉS KILOMÉTRIQUES -->
+            <section class="form-section">
+                <h2>6. Indemnités kilométriques (IK)</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="utilise-vehicule">
+                        J'utilise mon véhicule pour le travail
+                    </label>
+                </div>
+                <div id="ik-details" style="display: none;">
+                    <div class="form-group">
+                        <label for="type-vehicule">Type de véhicule
+                            <span class="tooltip-icon" title="Le type de véhicule détermine le barème fiscal utilisé pour calculer vos indemnités kilométriques. Les véhicules hybrides et électriques bénéficient de taux majorés.">ℹ️</span>
+                        </label>
+                        <select id="type-vehicule">
+                            <option value="thermique">Thermique</option>
+                            <option value="hybride">Hybride</option>
+                            <option value="electrique">Électrique</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="puissance-fiscale">Puissance fiscale (CV)
+                            <span class="tooltip-icon" title="La puissance fiscale (chevaux fiscaux) se trouve sur votre carte grise. Elle détermine le taux d'indemnité kilométrique selon le barème fiscal officiel.">ℹ️</span>
+                        </label>
+                        <input type="number" id="puissance-fiscale" min="1" max="20" step="1" placeholder="Ex: 5" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="km-mois">Kilomètres parcourus par mois
+                            <span class="tooltip-icon" title="Estimez le nombre moyen de kilomètres que vous parcourez chaque mois pour votre activité professionnelle (déplacements entre votre cabinet et vos patients, visites à domicile, etc.).">ℹ️</span>
+                        </label>
+                        <input type="number" id="km-mois" min="0" step="1" placeholder="Ex: 500" value="0">
+                    </div>
+                    <div class="info-box">
+                        <strong>Calcul automatique :</strong>
+                        <div>Kilomètres annuels : <span id="km-annuels">0</span> km</div>
+                        <div>IK mensuelles : <span id="ik-mensuel">0 €</span></div>
+                        <div>IK annuelles : <span id="ik-annuel">0 €</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 7: AMORTISSEMENTS -->
+            <section class="form-section">
+                <h2>7. Amortissements
+                    <span class="tooltip-icon" title="Les amortissements permettent de répartir le coût d'un bien sur plusieurs années. Par exemple, un ordinateur acheté 1200€ sur 3 ans donne un amortissement annuel de 400€. C'est une charge déductible fiscalement." style="font-size: 0.6em; vertical-align: middle;">ℹ️</span>
+                </h2>
+                <div id="amortissements-list">
+                    <!-- Les biens amortissables seront ajoutés dynamiquement -->
+                </div>
+                <button type="button" class="btn-secondary" id="btn-ajouter-bien">+ Ajouter un bien</button>
+                <div class="info-box">
+                    <strong>Total des amortissements annuels :</strong>
+                    <div><span id="total-amortissements">0 €</span></div>
+                </div>
+            </section>
+
+            <!-- SECTION 8: SCÉNARIOS MULTIPLES -->
+            <section class="form-section">
+                <h2>8. Scénarios multiples</h2>
+                <div class="scenarios-container">
+                    <div class="scenario-card">
+                        <h3>Optimiste</h3>
+                        <button type="button" class="btn-scenario" id="scenario-optimiste">Appliquer</button>
+                        <div class="scenario-preview" id="preview-optimiste">-</div>
+                        <div class="scenario-description">Taux de remplissage +10% par rapport à votre simulation actuelle</div>
+                    </div>
+                    <div class="scenario-card">
+                        <h3>Réaliste</h3>
+                        <button type="button" class="btn-scenario" id="scenario-realiste">Appliquer</button>
+                        <div class="scenario-preview" id="preview-realiste">-</div>
+                        <div class="scenario-description">Correspond à votre simulation actuelle</div>
+                    </div>
+                    <div class="scenario-card">
+                        <h3>Pessimiste</h3>
+                        <button type="button" class="btn-scenario" id="scenario-pessimiste">Appliquer</button>
+                        <div class="scenario-preview" id="preview-pessimiste">-</div>
+                        <div class="scenario-description">Taux de remplissage -10% par rapport à votre simulation actuelle</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 9: CALCULS AVANCÉS -->
+            <section class="form-section">
+                <h2>9. Indicateurs clés</h2>
+                <div class="advanced-calculations">
+                    <div class="calc-item">
+                        <div>
+                            <label>Seuil de rentabilité</label>
+                            <small>Montant de CA minimum nécessaire pour couvrir toutes vos charges (charges + IK + amortissements). En dessous, vous êtes en perte. Au-dessus, vous générez un bénéfice.</small>
+                        </div>
+                        <span class="calc-value" id="seuil-rentabilite">0 €</span>
+                    </div>
+                    <div class="calc-item">
+                        <div>
+                            <label>Taux de marge net</label>
+                            <small>Pourcentage de bénéfice restant après toutes vos charges. Exemple : 30% signifie que sur 100€ de CA, il vous reste 30€ après avoir payé toutes vos charges.</small>
+                        </div>
+                        <span class="calc-value" id="taux-marge">0 %</span>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <p><strong>Note :</strong> Ces calculs sont basés sur vos données actuelles. Les cotisations sociales ne sont pas incluses dans ces estimations.</p>
+                </div>
+            </section>
+
+            <!-- SECTION 10: RÉSULTATS FINAUX -->
+            <section class="form-section highlight final-results">
+                <h2>10. Résultats financiers</h2>
+                
+                <!-- Résultats principaux côte à côte -->
+                <div class="main-results-grid">
+                    <div class="result-section">
+                        <h3 class="result-section-title">Chiffre d'affaires annuel</h3>
+                        <div class="result-main-value positive" id="result-ca">0 €</div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3 class="result-section-title">Résultat avant cotisations</h3>
+                        <div class="result-main-value" id="result-avant-cotisations">0 €</div>
+                    </div>
+                </div>
+                
+                <!-- Dépenses annuelles -->
+                <div class="expenses-section">
+                    <h3 class="result-section-title">Détail des dépenses annuelles</h3>
+                    <div class="expenses-box">
+                        <div class="expense-category">
+                            <div class="expense-label">Charges et achats</div>
+                            <div class="expense-value negative" id="result-charges">0 €</div>
+                        </div>
+                        <div class="expense-category">
+                            <div class="expense-label">Indemnités kilométriques</div>
+                            <div class="expense-value negative" id="result-ik">0 €</div>
+                        </div>
+                        <div class="expense-category">
+                            <div class="expense-label">Amortissements</div>
+                            <div class="expense-value negative" id="result-amortissements">0 €</div>
+                        </div>
+                        <div class="expense-total">
+                            <div class="expense-label">Total des dépenses</div>
+                            <div class="expense-value negative" id="result-total-depenses">0 €</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <p><strong>Note :</strong> Les cotisations sociales ne sont pas incluses dans ce calcul. Consultez votre expert-comptable si vous avez des questions.</p>
+                </div>
+            </section>
+            
+            <!-- Note de transition vers les simulations -->
+            <div class="forecast-highlight-box">
+                <div class="forecast-icon">💡</div>
+                <div class="forecast-content">
+                    <h3 class="forecast-title">Vous avez votre prévisionnel pour 2026 !</h3>
+                    <p class="forecast-text">Avoir un prévisionnel financier vous permet de <strong>savoir où vous allez</strong>, d'<strong>ajuster votre scénario</strong> selon vos objectifs, d'<strong>anticiper vos charges sociales</strong> et de prendre des décisions éclairées pour votre activité professionnelle.</p>
+                    <p class="forecast-text">Si vous souhaitez aller plus loin et <strong>analyser en détail toute votre année</strong>, j'ai créé un outil complet sur Google Sheets disponible dans <a href="https://www.coachtoncab.fr/gestionfinanciereliberal" target="_blank" class="forecast-link">ma boutique</a>.</p>
+                </div>
+            </div>
+
+            <!-- SECTION 11: SIMULATIONS "ET SI..." -->
+            <section class="form-section simulation-section">
+                <h2>11. Simulations "Et si..."</h2>
+                
+                <div class="warning-box" style="margin-bottom: 25px;">
+                    <div class="warning-title">💡 Simulations avancées</div>
+                    <div class="warning-text">Cette section vous permet de tester différents scénarios pour voir l'impact sur vos résultats financiers. Les résultats ci-dessous prennent en compte toutes les modifications que vous saisissez dans les champs "Et si...". Les valeurs en <strong>vert</strong> indiquent une amélioration par rapport à votre prévisionnel de base, en <strong>rouge</strong> une diminution.</div>
+                </div>
+                
+                <div class="simulations-container">
+                    <div class="simulation-item">
+                        <label>
+                            Et si j'ajoute <input type="number" id="simul-jours-ajout" min="0" max="7" step="1" value="0" class="simul-input"> jour(s) de travail par semaine ?
+                        </label>
+                    </div>
+                    
+                    <div class="simulation-item">
+                        <label>
+                            Et si j'ajoute <input type="number" id="simul-demi-journees-ajout" min="0" step="1" value="0" class="simul-input"> demi-journée(s) par semaine ?
+                        </label>
+                    </div>
+                    
+                    <div class="simulation-item">
+                        <label>
+                            Et si je réduis mes charges de <input type="number" id="simul-charges-reduction" min="0" step="0.01" value="0" class="simul-input"> €/mois ?
+                        </label>
+                    </div>
+                    
+                    <div class="simulation-item">
+                        <label>
+                            Et si j'ajoute une charge de <input type="number" id="simul-charges-ajout" min="0" step="0.01" value="0" class="simul-input"> €/mois ?
+                        </label>
+                    </div>
+                    
+                    <div class="simulation-item">
+                        <label>
+                            Et si je prends <input type="number" id="simul-vacances-plus" min="0" max="53" step="1" value="0" class="simul-input"> semaine(s) de vacances de plus ?
+                        </label>
+                    </div>
+                    
+                    <div class="simulation-item">
+                        <label>
+                            Et si je réduis mes vacances de <input type="number" id="simul-vacances-moins" min="0" max="53" step="1" value="0" class="simul-input"> semaine(s) ?
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Résultats après simulation -->
+                <div class="simulation-results-section" style="margin-top: 35px; padding-top: 30px; border-top: 2px solid #000000;">
+                    <h3 class="result-section-title">Résultats après simulation</h3>
+                    
+                    <!-- Résultats principaux côte à côte -->
+                    <div class="main-results-grid">
+                        <div class="result-section">
+                            <h3 class="result-section-title">Chiffre d'affaires annuel</h3>
+                            <div class="result-main-value positive" id="simul-result-ca">0 €</div>
+                        </div>
+                        
+                        <div class="result-section">
+                            <h3 class="result-section-title">Résultat avant cotisations</h3>
+                            <div class="result-main-value" id="simul-result-avant-cotisations">0 €</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dépenses annuelles -->
+                    <div class="expenses-section">
+                        <h3 class="result-section-title">Détail des dépenses annuelles</h3>
+                        <div class="expenses-box">
+                            <div class="expense-category">
+                                <div class="expense-label">Charges et achats</div>
+                                <div class="expense-value negative" id="simul-result-charges">0 €</div>
+                            </div>
+                            <div class="expense-category">
+                                <div class="expense-label">Indemnités kilométriques</div>
+                                <div class="expense-value negative" id="simul-result-ik">0 €</div>
+                            </div>
+                            <div class="expense-category">
+                                <div class="expense-label">Amortissements</div>
+                                <div class="expense-value negative" id="simul-result-amortissements">0 €</div>
+                            </div>
+                            <div class="expense-total">
+                                <div class="expense-label">Total des dépenses</div>
+                                <div class="expense-value negative" id="simul-result-total-depenses">0 €</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p class="disclaimer-title">Avertissement</p>
+            <p class="disclaimer-text">Ce simulateur est un outil d'estimation à titre informatif uniquement. Les montants réels peuvent varier selon votre situation professionnelle, votre régime fiscal et d'autres facteurs spécifiques. Emma-CoachTonCab ne garantit pas l'exactitude des résultats obtenus et ne pourra être tenue responsable d'erreurs, d'omissions ou de décisions prises sur la base des informations fournies par ce simulateur. Il est recommandé de consulter un expert-comptable ou un conseil fiscal pour une analyse précise de votre situation.</p>
+            <p class="copyright">© 2026 Emma-CoachTonCab - Tous droits réservés - Reproduction interdite</p>
+        </footer>
+    </div>
+
+    <!-- Modale pour sauvegarder une simulation -->
+    <div id="modal-save" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>💾 Sauvegarder la simulation</h2>
+            <div class="form-group">
+                <label for="simulation-name">Nom de la simulation :</label>
+                <input type="text" id="simulation-name" placeholder="Ex: Simulation optimiste 2024" maxlength="50">
+                <small>Donnez un nom à cette simulation pour la retrouver facilement</small>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="btn-confirm-save">Sauvegarder</button>
+                <button type="button" class="btn-remove" id="btn-cancel-save">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale pour afficher les simulations sauvegardées -->
+    <div id="modal-load" class="modal">
+        <div class="modal-content modal-large">
+            <span class="modal-close">&times;</span>
+            <h2>📂 Mes simulations sauvegardées</h2>
+            <div id="simulations-list" class="simulations-list">
+                <p class="no-simulations">Aucune simulation sauvegardée pour le moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

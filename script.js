@@ -657,9 +657,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Charges
+    // Charges - mettre à jour les montants annuels en temps réel
     document.querySelectorAll('.charge-input').forEach(input => {
-        input.addEventListener('input', calculerTout);
+        input.addEventListener('input', function() {
+            // Mettre à jour le montant annuel de cette charge immédiatement
+            const montantMensuel = parseFloat(this.value) || 0;
+            const montantAnnuel = montantMensuel * 12;
+            const annuelElement = document.getElementById(this.id + '-annuel');
+            if (annuelElement) {
+                annuelElement.textContent = formatEuro(montantAnnuel) + '/an';
+            }
+            // Puis calculer tout le reste
+            calculerTout();
+        });
     });
     
     // IK
@@ -709,6 +719,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Calcul initial
     chargerDonneesSauvegardees();
     calculerTout();
+    
+    // Initialiser l'affichage des montants annuels pour les charges
+    document.querySelectorAll('.charge-input').forEach(input => {
+        const montantMensuel = parseFloat(input.value) || 0;
+        const montantAnnuel = montantMensuel * 12;
+        const annuelElement = document.getElementById(input.id + '-annuel');
+        if (annuelElement) {
+            annuelElement.textContent = formatEuro(montantAnnuel) + '/an';
+        }
+    });
     
     // Event listeners pour export
     document.getElementById('btn-export-pdf')?.addEventListener('click', exporterPDF);

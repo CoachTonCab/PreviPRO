@@ -43,7 +43,7 @@
                         Taux de remplissage (%)
                         <span class="tooltip-icon" title="Pourcentage de séances réellement effectuées par rapport au nombre de créneaux disponibles. Ex: 80% signifie que 8 séances sur 10 possibles sont réalisées.">ℹ️</span>
                     </label>
-                    <input type="number" id="taux-remplissage" min="0" max="100" step="1" placeholder="Ex: 80" value="80">
+                    <input type="number" id="taux-remplissage" min="0" max="100" step="1" placeholder="Ex: 80">
                     <small>Pourcentage de séances réellement effectuées</small>
                 </div>
                 <div class="form-group">
@@ -61,11 +61,11 @@
                         </label>
                     </div>
                     <div id="redevance-pourcentage-container" style="margin-top: 5px;">
-                        <input type="number" id="redevance-pourcentage-input" min="0" max="100" step="0.1" placeholder="Ex: 10" value="0">
+                        <input type="number" id="redevance-pourcentage-input" min="0" max="100" step="0.1" placeholder="Ex: 10">
                         <small>Pourcentage de votre CA annuel</small>
                     </div>
                     <div id="redevance-fixe-container" style="display: none; margin-top: 5px;">
-                        <input type="number" id="redevance-fixe-input" min="0" step="0.01" placeholder="Ex: 5000" value="0">
+                        <input type="number" id="redevance-fixe-input" min="0" step="0.01" placeholder="Ex: 5000">
                         <small>Montant fixe à payer annuellement</small>
                     </div>
                 </div>
@@ -247,16 +247,16 @@
                     <label for="semaines-vacances">Nombre de semaines de vacances prévues
                         <span class="tooltip-icon" title="Indiquez le nombre de semaines complètes où vous ne travaillerez pas dans l'année. Ces semaines seront soustraites des 53 semaines de l'année pour calculer vos semaines réellement travaillées.">ℹ️</span>
                     </label>
-                    <input type="number" id="semaines-vacances" min="0" max="53" step="1" placeholder="Ex: 5" value="5">
+                    <input type="number" id="semaines-vacances" min="0" max="53" step="1" placeholder="Ex: 5">
                 </div>
                 <div class="form-group">
                     <label for="jours-feries">Nombre de jours fériés tombant sur des jours travaillés
                         <span class="tooltip-icon" title="Comptez uniquement les jours fériés qui tombent sur un jour où vous travaillez habituellement ET qui ne sont pas déjà inclus dans vos semaines de vacances. Ces jours seront soustraits du nombre total de jours travaillés.">ℹ️</span>
                     </label>
-                    <input type="number" id="jours-feries" min="0" max="15" step="1" placeholder="Ex: 8" value="8">
-                    <small><strong>Important :</strong> Comptez uniquement les jours fériés qui tombent :
-                        <br>• Sur un jour où vous travaillez habituellement (ex: si vous travaillez le lundi et qu'un jour férié tombe un lundi)
-                        <br>• ET qui ne sont pas dans une semaine de vacances que vous avez prévue de ne pas travailler</small>
+                    <input type="number" id="jours-feries" min="0" max="15" step="1" placeholder="Ex: 8">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <button type="button" class="btn-secondary" id="btn-calendrier-feries" style="width: 100%;">📅 Voir le calendrier 2026</button>
                 </div>
                 <div class="info-box">
                     <strong>Calculs automatiques :</strong>
@@ -295,59 +295,73 @@
                 <div class="charges-grid">
                     <div class="form-group">
                         <label for="charge-petit-materiel">Petit matériel et fournitures</label>
-                        <input type="number" class="charge-input" id="charge-petit-materiel" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-petit-materiel" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-petit-materiel-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-loyer">Loyer</label>
-                        <input type="number" class="charge-input" id="charge-loyer" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-loyer" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-loyer-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-locatives">Charges locatives</label>
-                        <input type="number" class="charge-input" id="charge-locatives" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-locatives" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-locatives-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-logiciels">Abonnements logiciels</label>
-                        <input type="number" class="charge-input" id="charge-logiciels" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-logiciels" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-logiciels-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-telephone">Téléphone / Internet</label>
-                        <input type="number" class="charge-input" id="charge-telephone" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-telephone" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-telephone-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-assurances">Assurances</label>
-                        <input type="number" class="charge-input" id="charge-assurances" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-assurances" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-assurances-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-mutuelle">Mutuelle / Prévoyance</label>
-                        <input type="number" class="charge-input" id="charge-mutuelle" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-mutuelle" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-mutuelle-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-honoraires">Honoraires (expert-comptable, avocat...)</label>
-                        <input type="number" class="charge-input" id="charge-honoraires" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-honoraires" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-honoraires-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-repas">Frais de repas professionnels</label>
-                        <input type="number" class="charge-input" id="charge-repas" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-repas" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-repas-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-deplacement">Frais de déplacement (hors IK)</label>
-                        <input type="number" class="charge-input" id="charge-deplacement" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-deplacement" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-deplacement-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-formations">Formations professionnelles</label>
-                        <input type="number" class="charge-input" id="charge-formations" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-formations" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-formations-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-bancaires">Frais bancaires</label>
-                        <input type="number" class="charge-input" id="charge-bancaires" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-bancaires" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-bancaires-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-cfe">CFE</label>
-                        <input type="number" class="charge-input" id="charge-cfe" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-cfe" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-cfe-annuel">0 €/an</small>
                     </div>
                     <div class="form-group">
                         <label for="charge-interets">Intérêts d'emprunt</label>
-                        <input type="number" class="charge-input" id="charge-interets" min="0" step="0.01" placeholder="0" value="0">
+                        <input type="number" class="charge-input" id="charge-interets" min="0" step="0.01" placeholder="0">
+                        <small class="charge-annuel" id="charge-interets-annuel">0 €/an</small>
                     </div>
                 </div>
                 <div class="info-box">
@@ -381,13 +395,13 @@
                         <label for="puissance-fiscale">Puissance fiscale (CV)
                             <span class="tooltip-icon" title="La puissance fiscale (chevaux fiscaux) se trouve sur votre carte grise. Elle détermine le taux d'indemnité kilométrique selon le barème fiscal officiel.">ℹ️</span>
                         </label>
-                        <input type="number" id="puissance-fiscale" min="1" max="20" step="1" placeholder="Ex: 5" value="5">
+                        <input type="number" id="puissance-fiscale" min="1" max="20" step="1" placeholder="Ex: 5">
                     </div>
                     <div class="form-group">
                         <label for="km-mois">Kilomètres parcourus par mois
                             <span class="tooltip-icon" title="Estimez le nombre moyen de kilomètres que vous parcourez chaque mois pour votre activité professionnelle (déplacements entre votre cabinet et vos patients, visites à domicile, etc.).">ℹ️</span>
                         </label>
-                        <input type="number" id="km-mois" min="0" step="1" placeholder="Ex: 500" value="0">
+                        <input type="number" id="km-mois" min="0" step="1" placeholder="Ex: 500">
                     </div>
                     <div class="info-box">
                         <strong>Calcul automatique :</strong>
@@ -529,37 +543,37 @@
                 <div class="simulations-container">
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute <input type="number" id="simul-jours-ajout" min="0" max="7" step="1" value="0" class="simul-input"> jour(s) de travail par semaine ?
+                            Et si j'ajoute <input type="number" id="simul-jours-ajout" min="0" max="7" step="1" class="simul-input" placeholder="0"> jour(s) de travail par semaine ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute <input type="number" id="simul-demi-journees-ajout" min="0" step="1" value="0" class="simul-input"> demi-journée(s) par semaine ?
+                            Et si j'ajoute <input type="number" id="simul-demi-journees-ajout" min="0" step="1" class="simul-input" placeholder="0"> demi-journée(s) par semaine ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je réduis mes charges de <input type="number" id="simul-charges-reduction" min="0" step="0.01" value="0" class="simul-input"> €/mois ?
+                            Et si je réduis mes charges de <input type="number" id="simul-charges-reduction" min="0" step="0.01" class="simul-input" placeholder="0"> €/mois ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute une charge de <input type="number" id="simul-charges-ajout" min="0" step="0.01" value="0" class="simul-input"> €/mois ?
+                            Et si j'ajoute une charge de <input type="number" id="simul-charges-ajout" min="0" step="0.01" class="simul-input" placeholder="0"> €/mois ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je prends <input type="number" id="simul-vacances-plus" min="0" max="53" step="1" value="0" class="simul-input"> semaine(s) de vacances de plus ?
+                            Et si je prends <input type="number" id="simul-vacances-plus" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) de vacances de plus ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je réduis mes vacances de <input type="number" id="simul-vacances-moins" min="0" max="53" step="1" value="0" class="simul-input"> semaine(s) ?
+                            Et si je réduis mes vacances de <input type="number" id="simul-vacances-moins" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) ?
                         </label>
                     </div>
                 </div>
@@ -638,6 +652,17 @@
             <h2>📂 Mes simulations sauvegardées</h2>
             <div id="simulations-list" class="simulations-list">
                 <p class="no-simulations">Aucune simulation sauvegardée pour le moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale pour le calendrier des jours fériés 2026 -->
+    <div id="modal-calendrier-feries" class="modal">
+        <div class="modal-content modal-large">
+            <span class="modal-close">&times;</span>
+            <h2>📅 Calendrier des jours fériés 2026</h2>
+            <div id="calendrier-container" style="margin-top: 20px;">
+                <!-- Le calendrier sera généré par JavaScript -->
             </div>
         </div>
     </div>

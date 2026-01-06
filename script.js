@@ -288,7 +288,15 @@ function calculerCharges() {
     
     let totalMensuel = 0;
     chargesIds.forEach(id => {
-        totalMensuel += getValue(id);
+        const montantMensuel = getValue(id);
+        totalMensuel += montantMensuel;
+        
+        // Mettre à jour l'affichage annuel pour chaque charge
+        const montantAnnuel = montantMensuel * 12;
+        const annuelElement = document.getElementById(id + '-annuel');
+        if (annuelElement) {
+            annuelElement.textContent = formatEuro(montantAnnuel) + '/an';
+        }
     });
     
     const totalAnnuel = totalMensuel * 12;
@@ -711,6 +719,12 @@ document.addEventListener('DOMContentLoaded', function() {
         openModal('modal-load');
     });
     
+    // Bouton pour ouvrir le calendrier des jours fériés
+    document.getElementById('btn-calendrier-feries')?.addEventListener('click', () => {
+        openModal('modal-calendrier-feries');
+        genererCalendrier2026();
+    });
+    
     document.getElementById('btn-confirm-save')?.addEventListener('click', () => {
         const name = document.getElementById('simulation-name').value.trim();
         if (!name) {
@@ -991,6 +1005,8 @@ function openModal(modalId) {
         modal.style.display = 'block';
         if (modalId === 'modal-load') {
             displaySimulationsList();
+        } else if (modalId === 'modal-calendrier-feries') {
+            genererCalendrier2026();
         }
     }
 }
@@ -1448,6 +1464,429 @@ function mettreAJourSimulations() {
         resultElement.className = 'result-main-value negative';
     } else {
         resultElement.className = 'result-main-value';
+    }
+}
+
+// ===== CALENDRIER DES JOURS FÉRIÉS 2026 =====
+// Jours fériés français en 2026
+const joursFeries2026 = [
+    { date: new Date(2026, 0, 1), nom: 'Jour de l\'An', jourSemaine: 'jeudi' },
+    { date: new Date(2026, 3, 6), nom: 'Lundi de Pâques', jourSemaine: 'lundi' },
+    { date: new Date(2026, 4, 1), nom: 'Fête du Travail', jourSemaine: 'vendredi' },
+    { date: new Date(2026, 4, 8), nom: 'Victoire en Europe 1945', jourSemaine: 'dimanche' },
+    { date: new Date(2026, 4, 14), nom: 'Ascension', jourSemaine: 'samedi' },
+    { date: new Date(2026, 4, 25), nom: 'Lundi de Pentecôte', jourSemaine: 'lundi' },
+    { date: new Date(2026, 6, 14), nom: 'Fête Nationale', jourSemaine: 'mardi' },
+    { date: new Date(2026, 7, 15), nom: 'Assomption', jourSemaine: 'samedi' },
+    { date: new Date(2026, 10, 1), nom: 'Toussaint', jourSemaine: 'dimanche' },
+    { date: new Date(2026, 10, 11), nom: 'Armistice 1918', jourSemaine: 'mercredi' },
+    { date: new Date(2026, 11, 25), nom: 'Noël', jourSemaine: 'vendredi' }
+];
+
+// Vacances scolaires 2026 (commencent le samedi soir, se terminent le dimanche soir)
+// Les dates sont ajustées pour commencer le samedi et se terminer le dimanche inclus
+const vacancesScolaires2026 = [
+    // Vacances de la Toussaint (toutes zones) - samedi 17 oct au dimanche 1 nov
+    { debut: new Date(2026, 9, 17), fin: new Date(2026, 10, 1), nom: 'Vacances de la Toussaint', zone: 'Toutes zones', couleur: '#7a9fb8' },
+    // Vacances de Noël (toutes zones) - samedi 19 déc au dimanche 4 jan 2027
+    { debut: new Date(2026, 11, 19), fin: new Date(2027, 0, 4), nom: 'Vacances de Noël', zone: 'Toutes zones', couleur: '#7a9fb8' },
+    // Vacances d'hiver - Zone A - samedi 7 fév au dimanche 22 fév
+    { debut: new Date(2026, 1, 7), fin: new Date(2026, 1, 22), nom: 'Vacances d\'hiver', zone: 'Zone A', couleur: '#d4a5a5' },
+    // Vacances d'hiver - Zone B - samedi 14 fév au dimanche 1 mar
+    { debut: new Date(2026, 1, 14), fin: new Date(2026, 2, 1), nom: 'Vacances d\'hiver', zone: 'Zone B', couleur: '#8fb88f' },
+    // Vacances d'hiver - Zone C - samedi 21 fév au dimanche 8 mar
+    { debut: new Date(2026, 1, 21), fin: new Date(2026, 2, 8), nom: 'Vacances d\'hiver', zone: 'Zone C', couleur: '#b3d9f2' },
+    // Vacances de printemps - Zone A - samedi 4 avr au dimanche 20 avr
+    { debut: new Date(2026, 3, 4), fin: new Date(2026, 3, 20), nom: 'Vacances de printemps', zone: 'Zone A', couleur: '#d4a5a5' },
+    // Vacances de printemps - Zone B - samedi 11 avr au dimanche 27 avr
+    { debut: new Date(2026, 3, 11), fin: new Date(2026, 3, 27), nom: 'Vacances de printemps', zone: 'Zone B', couleur: '#8fb88f' },
+    // Vacances de printemps - Zone C - samedi 18 avr au dimanche 4 mai
+    { debut: new Date(2026, 3, 18), fin: new Date(2026, 4, 4), nom: 'Vacances de printemps', zone: 'Zone C', couleur: '#b3d9f2' },
+    // Vacances d'été (toutes zones) - samedi 4 juil au dimanche 31 août
+    { debut: new Date(2026, 6, 4), fin: new Date(2026, 7, 31), nom: 'Vacances d\'été', zone: 'Toutes zones', couleur: '#7a9fb8' }
+];
+
+const nomsMois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const nomsJours = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+// Fonction pour vérifier si une date est dans une période de vacances
+function estEnVacances(date) {
+    return vacancesScolaires2026.some(vac => {
+        const dateDebut = new Date(vac.debut.getFullYear(), vac.debut.getMonth(), vac.debut.getDate());
+        const dateFin = new Date(vac.fin.getFullYear(), vac.fin.getMonth(), vac.fin.getDate());
+        const dateTest = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return dateTest >= dateDebut && dateTest <= dateFin;
+    });
+}
+
+// Fonction pour obtenir les vacances d'une date
+function getVacancesDate(date) {
+    return vacancesScolaires2026.find(vac => {
+        const dateDebut = new Date(vac.debut.getFullYear(), vac.debut.getMonth(), vac.debut.getDate());
+        const dateFin = new Date(vac.fin.getFullYear(), vac.fin.getMonth(), vac.fin.getDate());
+        const dateTest = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return dateTest >= dateDebut && dateTest <= dateFin;
+    });
+}
+
+// Fonction pour obtenir toutes les vacances d'une date (plusieurs zones peuvent être en vacances en même temps)
+function getAllVacancesDate(date) {
+    return vacancesScolaires2026.filter(vac => {
+        const dateDebut = new Date(vac.debut.getFullYear(), vac.debut.getMonth(), vac.debut.getDate());
+        const dateFin = new Date(vac.fin.getFullYear(), vac.fin.getMonth(), vac.fin.getDate());
+        const dateTest = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        return dateTest >= dateDebut && dateTest <= dateFin;
+    });
+}
+
+function genererCalendrier2026() {
+    const container = document.getElementById('calendrier-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Liste des jours fériés en haut
+    const listeFeries = document.createElement('div');
+    listeFeries.style.cssText = 'margin-bottom: 30px; padding: 20px; background: #FEEFDB; border-radius: 8px; border: 2px solid #e6c99c;';
+    listeFeries.innerHTML = '<h3 style="margin-bottom: 15px; color: #073641;">📅 Jours fériés en 2026</h3>';
+    
+    const liste = document.createElement('div');
+    liste.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;';
+    
+    joursFeries2026.forEach(ferie => {
+        const jour = ferie.date.getDate();
+        const mois = nomsMois[ferie.date.getMonth()];
+        const jourSemaine = ferie.jourSemaine;
+        
+        const item = document.createElement('div');
+        item.style.cssText = 'padding: 10px; background: white; border-radius: 6px; border: 1px solid #e6c99c;';
+        item.innerHTML = `
+            <strong style="color: #073641;">${jour} ${mois}</strong><br>
+            <span style="color: #666; font-size: 0.9em;">${ferie.nom}</span><br>
+            <span style="color: #d4a5a5; font-size: 0.85em; font-weight: 600;">${jourSemaine.charAt(0).toUpperCase() + jourSemaine.slice(1)}</span>
+        `;
+        liste.appendChild(item);
+    });
+    
+    listeFeries.appendChild(liste);
+    container.appendChild(listeFeries);
+    
+    // Liste des vacances scolaires (regroupées et triées par date)
+    const listeVacances = document.createElement('div');
+    listeVacances.style.cssText = 'margin-bottom: 30px; padding: 20px; background: #e8f4f8; border-radius: 8px; border: 2px solid #7a9fb8;';
+    listeVacances.innerHTML = '<h3 style="margin-bottom: 15px; color: #073641;">🏖️ Vacances scolaires 2026</h3>';
+    
+    const listeVac = document.createElement('div');
+    listeVac.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;';
+    
+    // Trier toutes les vacances par date de début
+    const vacancesTriees = [...vacancesScolaires2026].sort((a, b) => {
+        return a.debut.getTime() - b.debut.getTime();
+    });
+    
+    // Regrouper par type de vacances
+    const vacancesParType = {};
+    vacancesTriees.forEach(vac => {
+        if (!vacancesParType[vac.nom]) {
+            vacancesParType[vac.nom] = [];
+        }
+        vacancesParType[vac.nom].push(vac);
+    });
+    
+    // Afficher dans l'ordre chronologique
+    Object.keys(vacancesParType).forEach(nomVacances => {
+        const vacances = vacancesParType[nomVacances];
+        
+        if (vacances.length === 1) {
+            // Vacances uniques (Toussaint, Noël, été)
+            const vac = vacances[0];
+            const item = document.createElement('div');
+            item.style.cssText = 'padding: 10px; background: white; border-radius: 6px; border: 1px solid #7a9fb8;';
+            item.innerHTML = `
+                <strong style="color: #073641;">${vac.nom}</strong><br>
+                <span style="color: #666; font-size: 0.9em;">${vac.debut.getDate()} ${nomsMois[vac.debut.getMonth()]} - ${vac.fin.getDate()} ${nomsMois[vac.fin.getMonth()]}</span>
+            `;
+            listeVac.appendChild(item);
+        } else {
+            // Vacances avec plusieurs zones (hiver, printemps)
+            const item = document.createElement('div');
+            item.style.cssText = 'padding: 10px; background: white; border-radius: 6px; border: 1px solid #7a9fb8;';
+            let zonesHtml = '';
+            vacances.forEach(vac => {
+                const debutStr = `${vac.debut.getDate()} ${nomsMois[vac.debut.getMonth()]}`;
+                const finStr = `${vac.fin.getDate()} ${nomsMois[vac.fin.getMonth()]}`;
+                zonesHtml += `<div style="margin-top: 5px;"><span style="color: ${vac.couleur}; font-weight: 600;">●</span> <span style="color: #666; font-size: 0.9em;">${vac.zone}: ${debutStr} - ${finStr}</span></div>`;
+            });
+            item.innerHTML = `
+                <strong style="color: #073641;">${nomVacances}</strong>
+                ${zonesHtml}
+            `;
+            listeVac.appendChild(item);
+        }
+    });
+    
+    listeVacances.appendChild(listeVac);
+    container.appendChild(listeVacances);
+    
+    // Légende
+    const legende = document.createElement('div');
+    legende.style.cssText = 'margin-bottom: 30px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #e6c99c;';
+    legende.innerHTML = `
+        <h4 style="margin-bottom: 10px; color: #073641;">Légende :</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 30px; background: #FEDDDB; border: 2px solid #d4a5a5; border-radius: 4px;"></div>
+                <span>Jours fériés</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 4px; background: #d4a5a5; border-radius: 2px;"></div>
+                <span>Vacances Zone A</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 4px; background: #8fb88f; border-radius: 2px;"></div>
+                <span>Vacances Zone B</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 30px; height: 4px; background: #b3d9f2; border-radius: 2px;"></div>
+                <span>Vacances Zone C</span>
+            </div>
+        </div>
+    `;
+    container.appendChild(legende);
+    
+    // Générer un calendrier pour chaque mois
+    for (let mois = 0; mois < 12; mois++) {
+        const moisDiv = document.createElement('div');
+        moisDiv.style.cssText = 'margin-bottom: 30px;';
+        
+        const titreMois = document.createElement('h3');
+        titreMois.style.cssText = 'margin-bottom: 15px; color: #073641; font-size: 1.3em;';
+        titreMois.textContent = nomsMois[mois] + ' 2026';
+        moisDiv.appendChild(titreMois);
+        
+        const calendrier = document.createElement('div');
+        calendrier.style.cssText = 'background: white; border: 2px solid #e6c99c; border-radius: 8px; padding: 15px;';
+        
+        // En-tête des jours de la semaine (commence par lundi)
+        const enTete = document.createElement('div');
+        enTete.style.cssText = 'display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 10px;';
+        // Réorganiser pour commencer par lundi
+        const nomsJoursLundi = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+        nomsJoursLundi.forEach(jour => {
+            const cell = document.createElement('div');
+            cell.style.cssText = 'text-align: center; font-weight: 600; color: #073641; padding: 8px;';
+            cell.textContent = jour;
+            enTete.appendChild(cell);
+        });
+        calendrier.appendChild(enTete);
+        
+        // Jours du mois
+        const premierJour = new Date(2026, mois, 1);
+        const dernierJour = new Date(2026, mois + 1, 0);
+        // Convertir dimanche (0) en 7 pour que lundi soit le premier jour
+        let premierJourSemaine = premierJour.getDay();
+        if (premierJourSemaine === 0) {
+            premierJourSemaine = 7; // Dimanche devient le 7ème jour
+        }
+        premierJourSemaine = premierJourSemaine - 1; // Ajuster pour que lundi = 0
+        const nbJours = dernierJour.getDate();
+        
+        const joursGrid = document.createElement('div');
+        joursGrid.style.cssText = 'display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; position: relative;';
+        
+        // Cases vides avant le premier jour
+        for (let i = 0; i < premierJourSemaine; i++) {
+            const vide = document.createElement('div');
+            vide.style.cssText = 'padding: 8px; height: 60px; box-sizing: border-box;';
+            joursGrid.appendChild(vide);
+        }
+        
+        // Stocker les informations de vacances pour créer des lignes continues
+        const vacancesParJour = [];
+        
+        // Jours du mois
+        for (let jour = 1; jour <= nbJours; jour++) {
+            const date = new Date(2026, mois, jour);
+            const jourSemaine = date.getDay();
+            const jourSemaineNom = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'][jourSemaine];
+            
+            const jourFerie = joursFeries2026.find(f => 
+                f.date.getDate() === jour && f.date.getMonth() === mois
+            );
+            
+            const toutesVacances = getAllVacancesDate(date);
+            const estVacances = estEnVacances(date);
+            
+            // Préparer les zones pour ce jour
+            const zonesAVoir = [];
+            if (estVacances && !jourFerie && toutesVacances.length > 0) {
+                toutesVacances.forEach((vac) => {
+                    if (vac.zone === 'Toutes zones') {
+                        zonesAVoir.push({ couleur: '#d4a5a5', zone: 'A', vacance: vac });
+                        zonesAVoir.push({ couleur: '#8fb88f', zone: 'B', vacance: vac });
+                        zonesAVoir.push({ couleur: '#b3d9f2', zone: 'C', vacance: vac });
+                    } else {
+                        zonesAVoir.push({ couleur: vac.couleur, zone: vac.zone, vacance: vac });
+                    }
+                });
+            }
+            
+            vacancesParJour.push({
+                jour: jour,
+                zones: zonesAVoir,
+                jourSemaine: jourSemaine,
+                jourFerie: jourFerie,
+                estVacances: estVacances
+            });
+            
+            const cell = document.createElement('div');
+            let cellStyle = 'padding: 8px; height: 60px; box-sizing: border-box; border-radius: 0; text-align: center; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: visible; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;';
+            
+            // Style selon le type de jour
+            if (jourFerie) {
+                cellStyle += 'background: #FEDDDB; border: 2px solid #d4a5a5; font-weight: 600;';
+            } else {
+                cellStyle += 'background: #f9f9f9;';
+            }
+            
+            if (jourSemaine === 0 || jourSemaine === 6) {
+                cellStyle += 'color: #999;';
+            } else {
+                cellStyle += 'color: #073641;';
+            }
+            
+            cell.style.cssText = cellStyle;
+            
+            const numJour = document.createElement('div');
+            numJour.style.cssText = 'font-weight: 600; font-size: 0.9em; position: relative; z-index: 2;';
+            numJour.textContent = jour;
+            cell.appendChild(numJour);
+            
+            if (jourFerie) {
+                const nomFerie = document.createElement('div');
+                nomFerie.style.cssText = 'font-size: 0.6em; color: #073641; line-height: 1.1; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 95%; text-align: center; z-index: 2; padding-top: 2px;';
+                nomFerie.textContent = jourFerie.nom;
+                cell.appendChild(nomFerie);
+                
+                // Ajuster la position du numéro pour éviter le chevauchement
+                numJour.style.marginBottom = '8px';
+            }
+            
+            joursGrid.appendChild(cell);
+        }
+        
+        // Ajouter les lignes horizontales continues pour les vacances
+        // Pour chaque zone, créer des lignes continues qui traversent plusieurs cases
+        const zonesUniques = new Set();
+        vacancesParJour.forEach(j => {
+            j.zones.forEach(z => zonesUniques.add(z.zone));
+        });
+        
+        // Trier les zones pour un affichage cohérent (A, B, C)
+        const ordreZones = { 'A': 1, 'B': 2, 'C': 3 };
+        const zonesTriees = Array.from(zonesUniques).sort((a, b) => (ordreZones[a] || 99) - (ordreZones[b] || 99));
+        
+        zonesTriees.forEach((zoneNom, zoneIndex) => {
+            // Trouver toutes les périodes continues pour cette zone
+            let periodeDebut = null;
+            let couleurZone = null;
+            
+            for (let i = 0; i <= vacancesParJour.length; i++) {
+                const jourInfo = i < vacancesParJour.length ? vacancesParJour[i] : null;
+                const zonePresente = jourInfo && !jourInfo.jourFerie ? jourInfo.zones.find(z => z.zone === zoneNom) : null;
+                
+                if (zonePresente) {
+                    if (periodeDebut === null) {
+                        periodeDebut = i;
+                        couleurZone = zonePresente.couleur;
+                    }
+                } else {
+                    // Si on avait une période en cours, créer la ligne continue
+                    if (periodeDebut !== null && couleurZone && i > periodeDebut) {
+                        const ligne = document.createElement('div');
+                        const indexDebut = periodeDebut + premierJourSemaine;
+                        const indexFin = (i - 1) + premierJourSemaine;
+                        const colDebut = indexDebut % 7;
+                        const colFin = indexFin % 7;
+                        const rowDebut = Math.floor(indexDebut / 7);
+                        const rowFin = Math.floor(indexFin / 7);
+                        
+                        // Calculer la position et la largeur en pourcentage
+                        const leftPercent = (colDebut / 7) * 100;
+                        const widthPercent = ((colFin - colDebut + 1) / 7) * 100;
+                        // Décaler verticalement selon la zone (A en haut, B au milieu, C en bas)
+                        const topOffset = rowDebut * 60 + 57 - (zoneIndex * 3); // Empiler les lignes
+                        
+                        if (rowDebut === rowFin) {
+                            // Même ligne : une seule ligne continue
+                            ligne.style.cssText = `
+                                position: absolute;
+                                top: ${topOffset}px;
+                                left: ${leftPercent}%;
+                                width: ${widthPercent}%;
+                                height: 3px;
+                                background: ${couleurZone};
+                                z-index: 1;
+                                pointer-events: none;
+                            `;
+                            joursGrid.appendChild(ligne);
+                        } else {
+                            // Plusieurs lignes : créer des segments
+                            // Première ligne (jusqu'à la fin de la semaine)
+                            const ligne1 = document.createElement('div');
+                            ligne1.style.cssText = `
+                                position: absolute;
+                                top: ${rowDebut * 60 + 57 - (zoneIndex * 3)}px;
+                                left: ${leftPercent}%;
+                                width: ${((7 - colDebut) / 7) * 100}%;
+                                height: 3px;
+                                background: ${couleurZone};
+                                z-index: 1;
+                                pointer-events: none;
+                            `;
+                            joursGrid.appendChild(ligne1);
+                            
+                            // Lignes complètes au milieu
+                            for (let r = rowDebut + 1; r < rowFin; r++) {
+                                const ligneMid = document.createElement('div');
+                                ligneMid.style.cssText = `
+                                    position: absolute;
+                                    top: ${r * 60 + 57 - (zoneIndex * 3)}px;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 3px;
+                                    background: ${couleurZone};
+                                    z-index: 1;
+                                    pointer-events: none;
+                                `;
+                                joursGrid.appendChild(ligneMid);
+                            }
+                            
+                            // Dernière ligne (du début jusqu'à colFin)
+                            const ligne2 = document.createElement('div');
+                            ligne2.style.cssText = `
+                                position: absolute;
+                                top: ${rowFin * 60 + 57 - (zoneIndex * 3)}px;
+                                left: 0;
+                                width: ${((colFin + 1) / 7) * 100}%;
+                                height: 3px;
+                                background: ${couleurZone};
+                                z-index: 1;
+                                pointer-events: none;
+                            `;
+                            joursGrid.appendChild(ligne2);
+                        }
+                        
+                        periodeDebut = null;
+                        couleurZone = null;
+                    }
+                }
+            }
+        });
+        
+        calendrier.appendChild(joursGrid);
+        moisDiv.appendChild(calendrier);
+        container.appendChild(moisDiv);
     }
 }
 

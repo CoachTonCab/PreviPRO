@@ -701,6 +701,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-ajouter-bien').addEventListener('click', ouvrirFormulaireAmortissement);
     // Le bouton "Ajouter" dans le formulaire sera géré dans renderAmortissements
     
+    // S'assurer que tous les modals sont cachés au démarrage
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+    
     // Calcul initial
     chargerDonneesSauvegardees();
     calculerTout();
@@ -720,10 +725,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Bouton pour ouvrir le calendrier des jours fériés
-    document.getElementById('btn-calendrier-feries')?.addEventListener('click', () => {
-        openModal('modal-calendrier-feries');
-        genererCalendrier2026();
-    });
+    const btnCalendrier = document.getElementById('btn-calendrier-feries');
+    if (btnCalendrier) {
+        btnCalendrier.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const modal = document.getElementById('modal-calendrier-feries');
+            if (modal) {
+                openModal('modal-calendrier-feries');
+            } else {
+                console.error('Modal calendrier non trouvé');
+            }
+        });
+    } else {
+        console.error('Bouton calendrier non trouvé');
+    }
     
     document.getElementById('btn-confirm-save')?.addEventListener('click', () => {
         const name = document.getElementById('simulation-name').value.trim();
@@ -1003,11 +1019,14 @@ function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'block';
+        modal.style.visibility = 'visible';
         if (modalId === 'modal-load') {
             displaySimulationsList();
         } else if (modalId === 'modal-calendrier-feries') {
             genererCalendrier2026();
         }
+    } else {
+        console.error('Modal non trouvé:', modalId);
     }
 }
 

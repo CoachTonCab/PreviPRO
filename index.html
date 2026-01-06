@@ -8,8 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -22,8 +20,6 @@
             <div class="header-actions">
                 <button type="button" class="btn-export" id="btn-save-simulation">💾 Sauvegarder</button>
                 <button type="button" class="btn-export" id="btn-load-simulations">📂 Mes simulations</button>
-                <button type="button" class="btn-export" id="btn-export-pdf">📄 Export PDF</button>
-                <button type="button" class="btn-export" id="btn-export-excel">📊 Export Excel</button>
             </div>
         </header>
 
@@ -415,7 +411,7 @@
             <!-- SECTION 7: AMORTISSEMENTS -->
             <section class="form-section">
                 <h2>7. Amortissements
-                    <span class="tooltip-icon" title="Les amortissements permettent de répartir le coût d'un bien sur plusieurs années. Par exemple, un ordinateur acheté 1200€ sur 3 ans donne un amortissement annuel de 400€. C'est une charge déductible fiscalement." style="font-size: 0.6em; vertical-align: middle;">ℹ️</span>
+                    <span class="tooltip-icon" title="Les amortissements concernent les achats de biens de plus de 500€. Ils permettent de répartir le coût d'un bien sur plusieurs années. Par exemple, un ordinateur acheté 1200€ sur 3 ans donne un amortissement annuel de 400€. C'est une charge déductible fiscalement." style="font-size: 0.6em; vertical-align: middle;">ℹ️</span>
                 </h2>
                 <div id="amortissements-list">
                     <!-- Les biens amortissables seront ajoutés dynamiquement -->

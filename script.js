@@ -730,10 +730,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Event listeners pour export
-    document.getElementById('btn-export-pdf')?.addEventListener('click', exporterPDF);
-    document.getElementById('btn-export-excel')?.addEventListener('click', exporterExcel);
-    
     // Event listeners pour sauvegarde et chargement des simulations
     document.getElementById('btn-save-simulation')?.addEventListener('click', () => {
         openModal('modal-save');
@@ -1218,72 +1214,6 @@ calculerTout = function() {
     originalCalculerTout();
     mettreAJourVisualisations();
 };
-
-// ===== EXPORT PDF =====
-function exporterPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    const { caAnnuelBrut, caMensuel, redevanceAnnuelle } = calculerCA();
-    const { totalAnnuel } = calculerCharges();
-    const ikAnnuel = calculerIKTotal();
-    const amortissements = calculerAmortissements();
-    const resultat = caAnnuelBrut - totalAnnuel - redevanceAnnuelle - ikAnnuel - amortissements;
-    
-    doc.setFontSize(18);
-    doc.text('Prévisionnel Financier', 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 30);
-    
-    let y = 50;
-    doc.setFontSize(14);
-    doc.text('Résultats', 20, y);
-    y += 10;
-    doc.setFontSize(10);
-    doc.text(`Chiffre d'affaires annuel: ${formatEuro(caAnnuelBrut)}`, 20, y);
-    y += 7;
-    doc.text(`Total charges annuelles: ${formatEuro(totalAnnuel + redevanceAnnuelle)}`, 20, y);
-    y += 7;
-    doc.text(`Indemnités kilométriques: ${formatEuro(ikAnnuel)}`, 20, y);
-    y += 7;
-    doc.text(`Amortissements: ${formatEuro(amortissements)}`, 20, y);
-    y += 7;
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text(`Résultat avant cotisations: ${formatEuro(resultat)}`, 20, y);
-    
-    doc.save('previsionnel-financier.pdf');
-}
-
-// ===== EXPORT EXCEL =====
-function exporterExcel() {
-    const { caAnnuelBrut, caMensuel, redevanceAnnuelle } = calculerCA();
-    const { totalAnnuel } = calculerCharges();
-    const ikAnnuel = calculerIKTotal();
-    const amortissements = calculerAmortissements();
-    const resultat = caAnnuelBrut - totalAnnuel - redevanceAnnuelle - ikAnnuel - amortissements;
-    
-    const wb = XLSX.utils.book_new();
-    
-    // Feuille 1: Résumé
-    const donnees = [
-        ['Prévisionnel Financier', ''],
-        ['Date', new Date().toLocaleDateString('fr-FR')],
-        [''],
-        ['Résultats', ''],
-        ['Chiffre d\'affaires annuel', caAnnuelBrut],
-        ['CA mensuel moyen', caMensuel],
-        ['Total charges annuelles', totalAnnuel + redevanceAnnuelle],
-        ['Indemnités kilométriques', ikAnnuel],
-        ['Amortissements', amortissements],
-        ['Résultat avant cotisations', resultat]
-    ];
-    
-    const ws = XLSX.utils.aoa_to_sheet(donnees);
-    XLSX.utils.book_append_sheet(wb, ws, 'Résumé');
-    
-    XLSX.writeFile(wb, 'previsionnel-financier.xlsx');
-}
 
 // ===== SCÉNARIOS =====
 function appliquerScenario(type) {

@@ -515,37 +515,37 @@
                 <div class="simulations-container">
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute <input type="number" id="simul-jours-ajout" min="0" max="7" step="1" class="simul-input" placeholder="0"> jour(s) de travail par semaine ?
+                            Et si j'ajoute <input type="number" id="simul-consultations-ajout" min="0" step="1" class="simul-input" placeholder="0"> consultation(s) par semaine ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute <input type="number" id="simul-demi-journees-ajout" min="0" step="1" class="simul-input" placeholder="0"> demi-journée(s) par semaine ?
+                            Et si je retire <input type="number" id="simul-consultations-reduction" min="0" step="1" class="simul-input" placeholder="0"> consultation(s) par semaine ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je réduis mes charges de <input type="number" id="simul-charges-reduction" min="0" step="0.01" class="simul-input" placeholder="0"> €/mois ?
+                            Et si je prends <input type="number" id="simul-vacances-plus" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) de vacances en plus ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si j'ajoute une charge de <input type="number" id="simul-charges-ajout" min="0" step="0.01" class="simul-input" placeholder="0"> €/mois ?
+                            Et si je retire <input type="number" id="simul-vacances-moins" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) de vacances ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je prends <input type="number" id="simul-vacances-plus" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) de vacances de plus ?
+                            Et si j'ajoute <input type="number" id="simul-charges-ajout" min="0" step="0.01" class="simul-input" placeholder="0"> € de charge(s) par mois ?
                         </label>
                     </div>
                     
                     <div class="simulation-item">
                         <label>
-                            Et si je réduis mes vacances de <input type="number" id="simul-vacances-moins" min="0" max="53" step="1" class="simul-input" placeholder="0"> semaine(s) ?
+                            Et si je retire <input type="number" id="simul-charges-reduction" min="0" step="0.01" class="simul-input" placeholder="0"> € de charge(s) par mois ?
                         </label>
                     </div>
                 </div>
@@ -564,29 +564,6 @@
                         <div class="result-section">
                             <h3 class="result-section-title">Résultat avant cotisations</h3>
                             <div class="result-main-value" id="simul-result-avant-cotisations">0 €</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Dépenses annuelles -->
-                    <div class="expenses-section">
-                        <h3 class="result-section-title">Détail des dépenses annuelles</h3>
-                        <div class="expenses-box">
-                            <div class="expense-category">
-                                <div class="expense-label">Charges et achats</div>
-                                <div class="expense-value negative" id="simul-result-charges">0 €</div>
-                            </div>
-                            <div class="expense-category">
-                                <div class="expense-label">Indemnités kilométriques</div>
-                                <div class="expense-value negative" id="simul-result-ik">0 €</div>
-                            </div>
-                            <div class="expense-category">
-                                <div class="expense-label">Amortissements</div>
-                                <div class="expense-value negative" id="simul-result-amortissements">0 €</div>
-                            </div>
-                            <div class="expense-total">
-                                <div class="expense-label">Total des dépenses</div>
-                                <div class="expense-value negative" id="simul-result-total-depenses">0 €</div>
-                            </div>
                         </div>
                     </div>
                 </div>

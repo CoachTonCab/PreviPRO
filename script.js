@@ -247,7 +247,24 @@ function calculerAnnuel() {
 function calculerCA() {
     const { seancesAnnuelles } = calculerAnnuel();
     const prixSeance = getValue('prix-seance');
-    const tauxRemplissage = getValue('taux-remplissage') / 100;
+    
+    // Utiliser le taux de base si un scénario est actif, sinon utiliser le taux actuel
+    let tauxRemplissage = getValue('taux-remplissage') / 100;
+    
+    if (scenarioActuel && tauxRemplissageBase !== null) {
+        // Appliquer le multiplicateur du scénario au taux de base
+        switch(scenarioActuel) {
+            case 'optimiste':
+                tauxRemplissage = Math.min(1, (tauxRemplissageBase / 100) * 1.1);
+                break;
+            case 'pessimiste':
+                tauxRemplissage = Math.max(0, (tauxRemplissageBase / 100) * 0.9);
+                break;
+            case 'realiste':
+                tauxRemplissage = tauxRemplissageBase / 100;
+                break;
+        }
+    }
     
     const caAnnuelBrut = seancesAnnuelles * prixSeance * tauxRemplissage;
     const caMensuel = caAnnuelBrut / 12;
@@ -562,6 +579,9 @@ function calculerTout() {
     } else {
         resultElement.className = 'result-main-value';
     }
+    
+    // Mettre à jour les prévisualisations des scénarios
+    mettreAJourScenarios();
 }
 
 // Fonction pour charger le logo avec plusieurs formats
@@ -606,6 +626,10 @@ function chargerLogo() {
     }, 100);
 }
 
+// Variable pour stocker le scénario actuel et le taux de base
+let scenarioActuel = null;
+let tauxRemplissageBase = null;
+
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     chargerLogo();
@@ -613,7 +637,14 @@ document.addEventListener('DOMContentLoaded', function() {
     ['prix-seance', 'taux-remplissage', 'semaines-vacances', 'jours-feries'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('input', calculerTout);
+            el.addEventListener('input', function() {
+                // Si le taux de remplissage est modifié manuellement, réinitialiser le scénario
+                if (id === 'taux-remplissage') {
+                    scenarioActuel = null;
+                    tauxRemplissageBase = null;
+                }
+                calculerTout();
+            });
         }
     });
     
@@ -803,8 +834,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('scenario-pessimiste')?.addEventListener('click', () => appliquerScenario('pessimiste'));
     
     // Event listeners pour simulations "Et si..."
-    ['simul-jours-ajout', 'simul-demi-journees-ajout', 'simul-charges-reduction', 
-     'simul-charges-ajout', 'simul-vacances-plus', 'simul-vacances-moins'].forEach(id => {
+    ['simul-consultations-ajout', 'simul-consultations-reduction', 'simul-vacances-plus', 
+     'simul-vacances-moins', 'simul-charges-ajout', 'simul-charges-reduction'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', mettreAJourSimulations);
@@ -1217,23 +1248,17 @@ calculerTout = function() {
 
 // ===== SCÉNARIOS =====
 function appliquerScenario(type) {
-    const tauxActuel = getValue('taux-remplissage');
-    let nouveauTaux = tauxActuel;
-    
-    switch(type) {
-        case 'optimiste':
-            nouveauTaux = Math.min(100, tauxActuel * 1.1);
-            break;
-        case 'pessimiste':
-            nouveauTaux = Math.max(0, tauxActuel * 0.9);
-            break;
-        case 'realiste':
-            nouveauTaux = tauxActuel; // Garde la valeur actuelle
-            break;
+    // Sauvegarder le taux de base si c'est la première fois ou si on change de scénario
+    if (tauxRemplissageBase === null || scenarioActuel !== type) {
+        tauxRemplissageBase = getValue('taux-remplissage');
     }
     
-    document.getElementById('taux-remplissage').value = Math.round(nouveauTaux);
+    // Stocker le scénario actuel sans modifier le champ
+    scenarioActuel = type;
+    
+    // Ne pas modifier le champ taux-remplissage, juste recalculer
     calculerTout();
+    mettreAJourScenarios();
 }
 
 function mettreAJourScenarios() {
@@ -1243,8 +1268,8 @@ function mettreAJourScenarios() {
     
     if (!previewOptimiste || !previewRealiste || !previewPessimiste) return;
     
-    const { caAnnuelBrut } = calculerCA();
-    const tauxActuel = getValue('taux-remplissage');
+    // Toujours utiliser le taux de base pour les prévisualisations (pas le taux modifié par un scénario)
+    const tauxBase = tauxRemplissageBase !== null ? tauxRemplissageBase : getValue('taux-remplissage');
     
     // Calculer les résultats pour chaque scénario
     const { seancesAnnuelles } = calculerAnnuel();
@@ -1262,9 +1287,10 @@ function mettreAJourScenarios() {
         return ca - totalAnnuel - redevanceCalc - ikAnnuel - amortissements;
     }
     
-    const resultatOptimiste = calculerResultat(Math.min(100, tauxActuel * 1.1));
-    const resultatRealiste = calculerResultat(tauxActuel);
-    const resultatPessimiste = calculerResultat(Math.max(0, tauxActuel * 0.9));
+    // Les prévisualisations utilisent toujours le taux de base
+    const resultatOptimiste = calculerResultat(Math.min(100, tauxBase * 1.1));
+    const resultatRealiste = calculerResultat(tauxBase);
+    const resultatPessimiste = calculerResultat(Math.max(0, tauxBase * 0.9));
     
     previewOptimiste.textContent = formatEuro(resultatOptimiste);
     previewRealiste.textContent = formatEuro(resultatRealiste);
@@ -1302,16 +1328,17 @@ function mettreAJourSimulations() {
     const redevanceFixe = getValue('redevance-fixe-input');
     
     // Récupérer toutes les modifications
-    const joursAjout = parseInt(getValue('simul-jours-ajout')) || 0;
-    const demiJourneesAjout = parseInt(getValue('simul-demi-journees-ajout')) || 0;
-    const chargesReduction = parseFloat(getValue('simul-charges-reduction')) || 0;
-    const chargesAjout = parseFloat(getValue('simul-charges-ajout')) || 0;
+    const consultationsAjout = parseInt(getValue('simul-consultations-ajout')) || 0;
+    const consultationsReduction = parseInt(getValue('simul-consultations-reduction')) || 0;
     const vacancesPlus = parseInt(getValue('simul-vacances-plus')) || 0;
     const vacancesMoins = parseInt(getValue('simul-vacances-moins')) || 0;
+    const chargesAjout = parseFloat(getValue('simul-charges-ajout')) || 0;
+    const chargesReduction = parseFloat(getValue('simul-charges-reduction')) || 0;
     
     // Vérifier s'il y a des modifications
-    const hasModifications = joursAjout > 0 || demiJourneesAjout > 0 || chargesReduction > 0 || 
-                             chargesAjout > 0 || vacancesPlus > 0 || vacancesMoins > 0;
+    const hasModifications = consultationsAjout > 0 || consultationsReduction > 0 || 
+                             vacancesPlus > 0 || vacancesMoins > 0 || 
+                             chargesAjout > 0 || chargesReduction > 0;
     
     if (!hasModifications) {
         // Afficher les valeurs de base
@@ -1319,13 +1346,7 @@ function mettreAJourSimulations() {
         caElement.textContent = formatEuro(caAnnuelBrut);
         caElement.className = 'result-main-value positive';
         
-        document.getElementById('simul-result-charges').textContent = formatEuro(totalAnnuel);
-        document.getElementById('simul-result-ik').textContent = formatEuro(ikAnnuel);
-        document.getElementById('simul-result-amortissements').textContent = formatEuro(amortissements);
-        
         const totalDepenses = totalAnnuel + redevanceAnnuelle + ikAnnuel + amortissements;
-        document.getElementById('simul-result-total-depenses').textContent = formatEuro(totalDepenses);
-        
         const resultat = caAnnuelBrut - totalDepenses;
         const resultElement = document.getElementById('simul-result-avant-cotisations');
         resultElement.textContent = formatEuro(resultat);
@@ -1344,19 +1365,14 @@ function mettreAJourSimulations() {
     let nouvellesCharges = totalAnnuel;
     let nouvellesVacances = semainesVacances;
     let nouvellesSeancesSemaine = seancesSemaine;
-    let nouveauxJoursSemaine = joursSemaine;
     
-    // Modifications des séances
-    if (joursAjout > 0) {
-        const seancesParJour = joursSemaine > 0 ? seancesSemaine / joursSemaine : 0;
-        nouvellesSeancesSemaine += joursAjout * seancesParJour;
-        nouveauxJoursSemaine += joursAjout;
+    // Modifications des consultations
+    if (consultationsAjout > 0) {
+        nouvellesSeancesSemaine += consultationsAjout;
     }
     
-    if (demiJourneesAjout > 0) {
-        const seancesParDemiJournee = joursSemaine > 0 ? seancesSemaine / (joursSemaine * 2) : 0;
-        nouvellesSeancesSemaine += demiJourneesAjout * seancesParDemiJournee;
-        nouveauxJoursSemaine += demiJourneesAjout * 0.5;
+    if (consultationsReduction > 0) {
+        nouvellesSeancesSemaine = Math.max(0, nouvellesSeancesSemaine - consultationsReduction);
     }
     
     // Modifications des vacances
@@ -1375,7 +1391,7 @@ function mettreAJourSimulations() {
     
     // Calculer les séances annuelles en tenant compte des jours fériés
     // Séances par semaine × semaines travaillées - séances perdues à cause des jours fériés
-    const seancesParJour = nouvellesSeancesSemaine > 0 && nouveauxJoursSemaine > 0 ? nouvellesSeancesSemaine / nouveauxJoursSemaine : 0;
+    const seancesParJour = nouvellesSeancesSemaine > 0 && joursSemaine > 0 ? nouvellesSeancesSemaine / joursSemaine : 0;
     const seancesPerduesJoursFeries = seancesParJour * joursFeries;
     const nouvellesSeancesAnnuelles = Math.max(0, (nouvellesSeancesSemaine * nouvellesSemainesTravaillees) - seancesPerduesJoursFeries);
     
@@ -1407,13 +1423,6 @@ function mettreAJourSimulations() {
     caElement.className = nouveauCA > caAnnuelBrut ? 'result-main-value positive' : 
                           nouveauCA < caAnnuelBrut ? 'result-main-value negative' : 
                           'result-main-value positive';
-    
-    document.getElementById('simul-result-charges').textContent = formatEuro(nouvellesCharges);
-    document.getElementById('simul-result-ik').textContent = formatEuro(ikAnnuel);
-    document.getElementById('simul-result-amortissements').textContent = formatEuro(amortissements);
-    
-    // Total des dépenses
-    document.getElementById('simul-result-total-depenses').textContent = formatEuro(totalDepensesSimul);
     
     const resultElement = document.getElementById('simul-result-avant-cotisations');
     resultElement.textContent = formatEuro(nouveauResultat);
